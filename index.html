@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dragon vs Tiger</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 16px;
+      background: #0f1923;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    .wallet-box {
+      background: #1f2c39;
+      padding: 12px;
+      border-radius: 10px;
+      display: inline-block;
+      margin-bottom: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      border: 1px solid #ffcc00;
+    }
+    .coins { color: #ffcc00; }
+    .btn-free {
+      background: #28a745;
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      margin-left: 10px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .arena {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      margin: 20px 0;
+    }
+    .card-box {
+      width: 100px;
+      height: 140px;
+      background: #ffffff;
+      color: #111;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 32px;
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+    .card-title {
+      font-size: 16px;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    .dragon-title { color: #ff4757; }
+    .tiger-title { color: #ffa502; }
+    .vs-text { font-size: 24px; font-weight: bold; color: #70a1ff; }
+    .bet-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin: 25px 0;
+    }
+    .btn-bet {
+      flex: 1;
+      max-width: 110px;
+      padding: 14px 8px;
+      font-size: 15px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #fff;
+    }
+    .btn-dragon { background: #ff4757; }
+    .btn-tie { background: #2ed573; }
+    .btn-tiger { background: #ffa502; }
+    .btn-bet:disabled { opacity: 0.5; }
+    #status-msg {
+      font-size: 18px;
+      font-weight: bold;
+      min-height: 24px;
+      margin: 15px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="wallet-box">
+    टोकन: <span id="token-display" class="coins">100</span> 🪙
+    <button class="btn-free" onclick="addFreeTokens()">+50 Free</button>
+  </div>
+
+  <h2>🐉 DRAGON vs TIGER 🐅</h2>
+
+  <div class="arena">
+    <div>
+      <div class="card-title dragon-title">DRAGON</div>
+      <div class="card-box" id="dragon-card">?</div>
+    </div>
+    <div class="vs-text">VS</div>
+    <div>
+      <div class="card-title tiger-title">TIGER</div>
+      <div class="card-box" id="tiger-card">?</div>
+    </div>
+  </div>
+
+  <div id="status-msg">शर्त (10 टोकन) लगाने के लिए चुनें:</div>
+
+  <div class="bet-buttons">
+    <button class="btn-bet btn-dragon" onclick="placeBet('DRAGON')">Dragon<br>(2x)</button>
+    <button class="btn-bet btn-tie" onclick="placeBet('TIE')">Tie<br>(8x)</button>
+    <button class="btn-bet btn-tiger" onclick="placeBet('TIGER')">Tiger<br>(2x)</button>
+  </div>
+
+  <script>
+    const BET_COST = 10;
+    let tokens = parseInt(localStorage.getItem("dt_tokens")) || 100;
+    const cards = [
+      { name: "A", val: 1 }, { name: "2", val: 2 }, { name: "3", val: 3 },
+      { name: "4", val: 4 }, { name: "5", val: 5 }, { name: "6", val: 6 },
+      { name: "7", val: 7 }, { name: "8", val: 8 }, { name: "9", val: 9 },
+      { name: "10", val: 10 }, { name: "J", val: 11 }, { name: "Q", val: 12 },
+      { name: "K", val: 13 }
+    ];
+
+    function updateDisplay() {
+      document.getElementById("token-display").innerText = tokens;
+      localStorage.setItem("dt_tokens", tokens);
+    }
+
+    function addFreeTokens() {
+      tokens += 50;
+      updateDisplay();
+      document.getElementById("status-msg").innerText = "बधाई! 50 फ्री टोकन क्रेडिट किए गए।";
+    }
+
+    function placeBet(choice) {
+      if (tokens < BET_COST) {
+        alert("टोकन खत्म हो गए! '+50 Free' बटन दबाएं।");
+        return;
+      }
+
+      tokens -= BET_COST;
+      updateDisplay();
+
+      const buttons = document.querySelectorAll(".btn-bet");
+      buttons.forEach(b => b.disabled = true);
+      document.getElementById("status-msg").innerText = "कार्ड खुल रहे हैं...";
+
+      setTimeout(() => {
+        const dCard = cards[Math.floor(Math.random() * cards.length)];
+        const tCard = cards[Math.floor(Math.random() * cards.length)];
+
+        document.getElementById("dragon-card").innerText = dCard.name;
+        document.getElementById("tiger-card").innerText = tCard.name;
+
+        let winner = "";
+        if (dCard.val > tCard.val) {
+          winner = "DRAGON";
+        } else if (tCard.val > dCard.val) {
+          winner = "TIGER";
+        } else {
+          winner = "TIE";
+        }
+
+        if (choice === winner) {
+          let winAmount = (winner === "TIE") ? (BET_COST * 8) : (BET_COST * 2);
+          tokens += winAmount;
+          document.getElementById("status-msg").innerHTML = `<span style="color:#2ed573;">🎉 ${winner} जीता! आप +${winAmount} टोकन जीते!</span>`;
+        } else {
+          document.getElementById("status-msg").innerHTML = `<span style="color:#ff4757;">❌ ${winner} जीता। आपकी शर्त हार गई।</span>`;
+        }
+
+        updateDisplay();
+        buttons.forEach(b => b.disabled = false);
+      }, 1000);
+    }
+
+    updateDisplay();
+  </script>
+</body>
+</html>
